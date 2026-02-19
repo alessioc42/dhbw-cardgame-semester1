@@ -20,6 +20,11 @@ int main() {
     _setmode(_fileno(stdout), _O_U16TEXT);
 #endif
 
+    wprintf(L"-----------------------------------------------\n");
+    wprintf(L"*      Programmieren I - Programmentwurf      *\n");
+    wprintf(L"*      Das DHBW-Kartenspiel                   *\n");
+    wprintf(L"-----------------------------------------------\n");
+
     srand((unsigned int)time(NULL));
 
     struct playingCard cards[CARDS_LEN];
@@ -31,11 +36,6 @@ int main() {
     struct playerStruct computer;
     setzeSpielerStandardwerte(&player, &computer);
     alleKartenAusteilen(cards, &player, &computer, currentTopCard);
-
-    wprintf(L"-----------------------------------------------\n");
-    wprintf(L"*      Programmieren I – Programmentwurf      *\n");
-    wprintf(L"*      Das DHBW-Kartenspiel                   *\n");
-    wprintf(L"-----------------------------------------------\n");
 
     const botFunction bot = waehleZufaelligenBot();
 

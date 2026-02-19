@@ -6,11 +6,14 @@
 
 #include <wchar.h>
 
+#define PLAYER_NAME_MAX_LEN 17
+
 typedef enum {COMPUTER, PLAYER} PlayerType;
 
 struct playerStruct {
     PlayerType type;
     struct playingCard *cards[ROUNDS];
+    wchar_t name[PLAYER_NAME_MAX_LEN];
     unsigned int numberOfCards;
     unsigned int points;
     unsigned int choice;

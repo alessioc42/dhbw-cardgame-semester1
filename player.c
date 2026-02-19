@@ -16,24 +16,65 @@ unsigned int gebeKarteAnSpieler(struct playerStruct *player, struct playingCard 
     return currentTopCard - 1;
 }
 
+void setzeSpielerName(wchar_t name[PLAYER_NAME_MAX_LEN]) {
+    wchar_t inputBuffer[PLAYER_NAME_MAX_LEN + 1]; // PLAYER_NAME_MAX_LEN characters + null terminator
+
+    while (1) {
+        wprintf(L"* Bitte geben Sie Ihren Namen ein: ");
+
+        if (fgetws(inputBuffer, sizeof(inputBuffer) / sizeof(wchar_t), stdin) == NULL) {
+            clearerr(stdin);
+            wprintf(L"\033[38;5;124mFehlerhafte Eingabe, bitte versuchen Sie es erneut!\033[0m\n");
+            continue;
+        }
+
+        size_t len = wcslen(inputBuffer);
+        if (len == 0) {
+            wprintf(L"\033[38;5;124mName darf nicht leer sein!\033[0m\n");
+            continue;
+        }
+
+        if (inputBuffer[len - 1] == L'\n') {
+            inputBuffer[len - 1] = L'\0';
+            len--;
+        } else {
+            wint_t ch;
+            while ((ch = getwchar()) != WEOF && ch != L'\n');
+            wprintf(L"\033[38;5;124mName zu lang! Maximal %d Zeichen erlaubt.\033[0m\n", PLAYER_NAME_MAX_LEN - 1);
+            continue;
+        }
+
+        if (len == 0) {
+            wprintf(L"\033[38;5;124mName darf nicht leer sein!\033[0m\n");
+            continue;
+        }
+
+        if (len > PLAYER_NAME_MAX_LEN - 1) {
+            wprintf(L"\033[38;5;124mName zu lang! Maximal %d Zeichen erlaubt.\033[0m\n", PLAYER_NAME_MAX_LEN - 1);
+            continue;
+        }
+
+        wcscpy(name, inputBuffer);
+        break;
+    }
+}
+
 void setzeSpielerStandardwerte(struct playerStruct *player, struct playerStruct *computer) {
     player->type = PLAYER;
     player->numberOfCards = 0;
     player->points = 0;
     player->choice = (unsigned int)-1;
+    setzeSpielerName(player->name);
 
     computer->type = COMPUTER;
     computer->numberOfCards = 0;
     computer->points = 0;
     computer->choice = (unsigned int)-1;
+    wcscpy(computer->name, L"Computer");
 }
 
 void druckeSpielerDeck(const struct playerStruct *player) {
-    if (player->type == PLAYER) {
-        wprintf(L"SPIELER : ");
-    } else {
-        wprintf(L"COMPUTER: ");
-    }
+    wprintf(L"%-*ls : ", PLAYER_NAME_MAX_LEN, player->name);
     for (int i = 0; i < player->numberOfCards; i++) {
         druckeKarte(*player->cards[i]);
         wprintf(L" ");
@@ -43,14 +84,14 @@ void druckeSpielerDeck(const struct playerStruct *player) {
 
 void setzeSpielerEingabe(struct playerStruct *player) {
     druckeSpielerDeck(player);
-    wprintf(L"        ");
+    wprintf(L"%-*ls  :", PLAYER_NAME_MAX_LEN -1, L"");
     for (int i = 1; i <= player->numberOfCards; i++) {
-        wprintf(L"%4d", i);
+        wprintf(L"%3d ", i);
     }
     wprintf(L"\n");
 
     int userSelection;
-    while (true) {
+    while (1) {
         wprintf(L"Wahl (1 - %d): ", player->numberOfCards);
 
         wchar_t inputBuffer[16];
@@ -130,7 +171,7 @@ void spielloop(struct playerStruct *player, struct playerStruct *computer, botFu
             PlayerType winner = player->cards[player->choice]->value >= computer->cards[computer->choice]->value ? PLAYER : COMPUTER;
             unsigned int pointsToWin = player->cards[player->choice]->pointsValue + computer->cards[computer->choice]->pointsValue;
             if (winner == PLAYER) {
-                wprintf(L"\033[33m ---> Der Spieler hat diese Runde gewonnen (+%d)\033[0m\n", pointsToWin);
+                wprintf(L"\033[33m ---> %ls hat diese Runde gewonnen (+%d)\033[0m\n", player->name, pointsToWin);
                 player->points += pointsToWin;
             } else {
                 wprintf(L"\033[33m ---> Der Computer hat diese Runde gewonnen (+%d)\033[0m\n", pointsToWin);
@@ -152,11 +193,8 @@ void druckeGewinner(const struct playerStruct *player, const struct playerStruct
     wprintf(L"* %10d           * %10d           *\n", player->points, computer->points);
     wprintf(L"-----------------------------------------------\n");
     PlayerType finalWinner = player->points >= computer->points ? PLAYER : COMPUTER;
-    if (finalWinner == PLAYER) {
-        wprintf(L"* \033[32m Sie haben Gewonnen!\033[0m                        *\n");
-    } else {
-        wprintf(L"* \033[31m Der Computer hat Gewonnen!\033[0m                 *\n");
-    }
+    wprintf(finalWinner == PLAYER ? L"* \033[32m" : L"* \033[31m");
+    wprintf(L"Gewinner des Spiels: %ls\033[0m\n", finalWinner == PLAYER ? player->name : computer->name);
     wprintf(L"-----------------------------------------------\n");
     wprintf(L"----------------Ende des Spieles---------------\n");
     wprintf(L"-----------------------------------------------\n");
